@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "autosql"
+version = "0.1.0"
+description = "Functionality to quickly build autosql over large language models using langchain"
+authors = ["Simrat Hanspal"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+langchain = "^0.0.171"
+openai = "^0.27.6"
+python-dotenv = "^1.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.23.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
