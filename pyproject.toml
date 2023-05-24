@@ -1,15 +1,19 @@
 [tool.poetry]
 name = "autosql"
 version = "0.1.0"
-description = "Functionality to quickly build autosql over large language models using langchain"
+description = "AutoSQL built over large language models and langchain"
 authors = ["Simrat Hanspal"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-langchain = "^0.0.171"
-openai = "^0.27.6"
+langchain = "^0.0.177"
+openai = "^0.27.7"
+SQLAlchemy = "^2.0.15"
+fastapi = "^0.95.2"
+pydantic = "^1.10.7"
 python-dotenv = "^1.0.0"
+uvicorn = "^0.22.0"
 
 
 [tool.poetry.group.dev.dependencies]

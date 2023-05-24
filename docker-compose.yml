@@ -1,0 +1,9 @@
+version: '0.1.0'
+services:
+  autosql_demp:
+    build: .
+    container_name: "core-autosql-api-container"
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
