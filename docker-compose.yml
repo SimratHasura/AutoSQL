@@ -1,12 +1,14 @@
 version: "3.6"
 services:
-  autosql_demp:
+  autosql_demo:
     build: .
     container_name: "core-autosql-api-container"
     ports:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      PG_DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/postgres
   postgres:
     image: postgres:15
     restart: always

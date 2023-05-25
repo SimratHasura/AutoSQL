@@ -23,7 +23,7 @@ from langchain.prompts.prompt import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 
 
-engine = create_engine("postgresql://localhost/salesDB")
+engine = create_engine(os.environ['PG_DATABASE_URL'])
 metadata_obj = MetaData()
 # engine = create_engine("sqlite:///:memory:", echo=True) # Create a in memory SQLlite database engine
 load_dotenv() # Load environment variables from .env file
