@@ -11,6 +11,7 @@ from sqlalchemy import insert
 from sqlalchemy import MetaData
 from sqlalchemy import Table
 from sqlalchemy import Column
+from sqlalchemy.schema import CreateTable
 
 from langchain.llms import OpenAI
 from langchain.agents import Tool
@@ -18,10 +19,13 @@ from langchain.agents import load_tools
 from langchain.agents import initialize_agent
 from langchain.chains import SQLDatabaseChain
 from langchain.sql_database import SQLDatabase
+from langchain.prompts.prompt import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 
 
-engine = create_engine("sqlite:///:memory:", echo=True) # Create a in memory SQLlite database engine
+engine = create_engine("postgresql://localhost/salesDB")
+metadata_obj = MetaData()
+# engine = create_engine("sqlite:///:memory:", echo=True) # Create a in memory SQLlite database engine
 load_dotenv() # Load environment variables from .env file
 
 def initialise_llm():
@@ -41,7 +45,8 @@ def initialise_db_chain(llm, verbose_flag=False):
     """
     Initialize the database chain for tables
     """
-    metadata_obj = MetaData()
+    metadata_obj.reflect(bind=engine)
+    metadata_obj.drop_all(bind=engine)
 
     stocks = Table(
         "stocks",
@@ -50,14 +55,16 @@ def initialise_db_chain(llm, verbose_flag=False):
         Column("stock_ticker", String(4), nullable=False),
         Column("price", Float, nullable=False),
         Column("date", Date, nullable=False),
+        extend_existing=True,
     )
 
     company = Table(
         "company",
         metadata_obj,
         Column("company_id", Integer, primary_key=True),
-        Column("company_name", String(4), nullable=False),
+        Column("company_name", String(16), nullable=False),
         Column("stock_ticker", String(4), nullable=False),
+        extend_existing=True,
     )
 
     sales = Table(
@@ -67,6 +74,7 @@ def initialise_db_chain(llm, verbose_flag=False):
         Column("company_id", Integer, ForeignKey("company.company_id"), nullable=False),
         Column("date", Date, nullable=False),
         Column("sales", Float, nullable=False),
+        extend_existing=True,
     )
 
     metadata_obj.create_all(engine)
@@ -140,9 +148,30 @@ def initialise_db_chain(llm, verbose_flag=False):
     for obs in sales_observations:
         insert_sales_obs(obs)
 
-    # db = SQLDatabase.from_uri('postgres://simrat.hanspal:p7Zd3jxlzncs@odd-pond-833324.us-west-2.aws.neon.tech/eminent-flamingo-47_db_40?options=project%3Dodd-pond-833324&sslmode=require')
+    _DEFAULT_TEMPLATE = """Given an input question, first create a syntactically correct {dialect} query to run, then look at the results of the query and return the answer.
+    Use the following format:
+
+    Question: "Question here"
+    SQLQuery: "SQL Query to run"
+    SQLResult: "Result of the SQLQuery"
+    Answer: "SQLQuery here if the user asked to generate query otherwise SQLResult"
+
+    Only use the following tables:
+
+    {table_info}
+
+    Question: {input}"""
+    PROMPT = PromptTemplate(
+        input_variables=["input", "table_info", "dialect"], template=_DEFAULT_TEMPLATE
+    )
+
     db = SQLDatabase(engine=engine)
-    sql_chain = SQLDatabaseChain(llm=llm, database=db, verbose=verbose_flag)
+
+    sql_chain = SQLDatabaseChain(llm=llm, 
+                                    database=db, 
+                                    prompt=PROMPT,
+                                    verbose=verbose_flag, 
+                                    use_query_checker=True)
     return sql_chain
 
 def initialise_tools(llm, sql_chain):
