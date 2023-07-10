@@ -1,5 +1,6 @@
 import json
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from data_model import InputPrompt
 from autosql_demo import engine, metadata_obj
@@ -8,6 +9,15 @@ from autosql_demo import initialise_zeroshot_agent, initialise_conversational_ag
 
 VERBOSE_FLAG = True
 app = FastAPI() # Create FastAPI app
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 llm = initialise_llm() # Initialize the LLM
 sql_chain = initialise_db_chain(llm, verbose_flag=VERBOSE_FLAG) # Initialize the database chain
 tools = initialise_tools(llm, sql_chain) # Initialize the tools
